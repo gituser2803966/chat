@@ -1,4 +1,4 @@
-import React, {useContext,useEffect} from 'react';
+import React, {useContext, useEffect} from 'react';
 import {Image, View, Text, StyleSheet, Pressable} from 'react-native';
 import {AuthContext} from '../App';
 import MainTab from '../screens/MainTab';
@@ -7,6 +7,7 @@ import OpenChatScreen from '../screens/OpenChatSreen';
 import {enableScreens} from 'react-native-screens';
 import auth from '@react-native-firebase/auth';
 import {createNativeStackNavigator} from 'react-native-screens/native-stack';
+import {ContactsProvider} from '../contexts/ContactsProvider';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -14,7 +15,8 @@ const Stack = createNativeStackNavigator();
 export default function Dashboard({navigation}) {
   const {signOut} = useContext(AuthContext);
   const user = auth().currentUser;
-  var NameToDisplay = (user.displayName && user.displayName.substring(0,1)) || '';
+  var NameToDisplay =
+    (user.displayName && user.displayName.substring(0, 1)) || '';
   // console.log(user)
   //signOut fun
   const handleSignOut = () => {
@@ -26,9 +28,7 @@ export default function Dashboard({navigation}) {
     navigation.navigate('setting');
   };
 
-  const UserImageOnClick = () =>{
-
-  }
+  const UserImageOnClick = () => {};
 
   // header center
   const ImageTitleMainTab = () => {
@@ -53,7 +53,6 @@ export default function Dashboard({navigation}) {
     );
   };
 
-
   const ImageTitleOpenChat = () => {
     return (
       <Pressable
@@ -64,7 +63,7 @@ export default function Dashboard({navigation}) {
           <Image
             style={styles.userImageOpenChat}
             source={{
-              uri: 'https://picsum.photos/100/100'
+              uri: 'https://picsum.photos/100/100',
             }}
           />
           {/* {user.photoURL ? (
@@ -116,37 +115,39 @@ export default function Dashboard({navigation}) {
   // },[])
 
   return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="home"
-        component={MainTab}
-        options={{
-          headerCenter: props => <ImageTitleMainTab {...props} />,
-        }}
-      />
-      <Stack.Screen
-        options={{
-          headerLeft: props => <HeaderLeftSettingScreen {...props} />,
-          title: '',
-          headerRight: props => <HeaderRightSettingScreen {...props} />,
-          // stackPresentation: "fullScreenModal",
-        }}
-        name="setting"
-        component={SettingModal}
-      />
-      <Stack.Screen
-        options={{
-          headerShown:false,        
-          // headerLeft: props => <HeaderLeftSettingScreen {...props} />,
-          // title: 'User recieve image',
-          // headerCenter: props => <ImageTitleOpenChat {...props} />
-          // headerRight: props => <HeaderRightSettingScreen {...props} />,
-          // stackPresentation: "fullScreenModal",
-        }}
-        name="openchat"
-        component={OpenChatScreen}
-      />
-    </Stack.Navigator>
+    <ContactsProvider>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="home"
+          component={MainTab}
+          options={{
+            headerCenter: props => <ImageTitleMainTab {...props} />,
+          }}
+        />
+        <Stack.Screen
+          options={{
+            headerLeft: props => <HeaderLeftSettingScreen {...props} />,
+            title: '',
+            headerRight: props => <HeaderRightSettingScreen {...props} />,
+            // stackPresentation: "fullScreenModal",
+          }}
+          name="setting"
+          component={SettingModal}
+        />
+        <Stack.Screen
+          options={{
+            headerShown: false,
+            // headerLeft: props => <HeaderLeftSettingScreen {...props} />,
+            // title: 'User recieve image',
+            // headerCenter: props => <ImageTitleOpenChat {...props} />
+            // headerRight: props => <HeaderRightSettingScreen {...props} />,
+            // stackPresentation: "fullScreenModal",
+          }}
+          name="openchat"
+          component={OpenChatScreen}
+        />
+      </Stack.Navigator>
+    </ContactsProvider>
   );
 }
 
@@ -171,9 +172,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     // paddingBottom: 10,
   },
-  userImageOpenChat:{
-    width:40,
-    height:40,
+  userImageOpenChat: {
+    width: 40,
+    height: 40,
     borderRadius: 50,
     // paddingVertical:10,
   },

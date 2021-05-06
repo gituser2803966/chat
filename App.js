@@ -9,15 +9,9 @@
  import React, {useReducer, useEffect,useState} from 'react';
  import SignIn from './components/SignIn';
  import Dashboard from './components/Dashboard';
- import SettingModal from './screens/SettingModal';
  import {NavigationContainer} from '@react-navigation/native';
  import {enableScreens} from 'react-native-screens';
  import {createNativeStackNavigator} from 'react-native-screens/native-stack';
- import {
-   storeUserSession,
-   retrieveUserSession,
-   removeUserSession,
- } from './utilis/storage';
  import SignUp_Email from './components/SignUp_Email';
  import SignUp_Password from './components/SignUp_Password';
  import SignUp_DisplayName from './components/SignUp_DisplayName';
@@ -84,7 +78,6 @@
      () => ({
        signIn: async data => {
          const {email, password} = data;
-         await setAcceptLogin(true);
          // In a production app, we need to send some data (usually username, password) to server and get a token
          // We will also need to handle errors if sign in failed
          // After getting token, we need to persist the token using `SecureStore`

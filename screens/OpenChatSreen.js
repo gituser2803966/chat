@@ -10,57 +10,69 @@ import {
 import {GiftedChat} from 'react-native-gifted-chat';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import {roomRefWithDoc} from '../database';
-// import { NativeModules } from 'react-native'
+import {useContacts} from '../contexts/ContactsProvider';
 
 export default function OpenChatScreen({navigation, route}) {
   const {recipient} = route.params;
   const [messages, setMessages] = useState([]);
+  const {contacts} = useContacts();
   // const { RNRandomBytes } = NativeModules;
   const currentUser = auth().currentUser;
   useEffect(() => {
-    // console.log(RNRandomBytes)
-    // RNRandomBytes.randomBytes(32, (err, bytes) => {
-    //   // bytes is a base64string
-    //   console.log("bytes: ",bytes)
-    //   if(error){
-    //     console,log(error);
-    //   }
-    // })
-    // setMessages([
-    //   {
-    //     _id: 1,
-    //     text: 'Hello developer',
-    //     createdAt: new Date(),
-    //     user: {
-    //       _id: 2,
-    //       name: 'React Native',
-    //       avatar: 'https://placeimg.com/140/140/any',
-    //     },
-    //   },
-    // ])
+    // setMessages([]);
     const idPair = IDPair(currentUser.uid, recipient.uid);
     const unsubcriber = firestore()
       .collection('room')
       .doc(idPair)
       .collection('messages')
+      .orderBy('sent')
       .onSnapshot(
-        querySnapshot => {
-          querySnapshot.forEach((doc,index) => {
-            console.log(index)
-            // const messagesObj = {
-            //   _id: messageIdGenerator(),
-            //   text: doc.text,
-            //   createdAt: new Date(),
-            //   user: {
-            //     _id: doc.from,
-            //     name: currentUser.displayName,
-            //     avatar: currentUser.photoURL ? currentUser.photoURL : null,
-            //   },
-            // };
-            // setMessages(messagesObj)
+        snapshot => {
+          snapshot.docChanges().forEach(change => {
+            var loadMessagesFromFirebase = [];
+            if (change.type === 'added') {
+              var user = {};
+              const contact = contacts.find(contact => {
+                return contact.uid === change.doc.data().from;
+              });
+              // avatar = (contact.photoURL !== null && contact.photoURL) || null;
+              if (contact) {
+                user._id = contact.uid;
+                user.name = (
+                  contact.firstName +
+                  ' ' +
+                  contact.lastName
+                ).substring(0, 1);
+                if (contact.photoURL !== null) {
+                  user.avatar = contact.photoURL;
+                }
+              } else {
+                user._id = currentUser.uid;
+                user.name = currentUser.displayName.substring(0, 1);
+                if (currentUser.photoURL !== null) {
+                  user.photoURL = currentUser.photoURL;
+                }
+              }
+              loadMessagesFromFirebase.push({
+                _id: Math.random() + Math.random() + 0.001,
+                text: change.doc.data().text,
+                createdAt: new Date(),
+                user: user,
+              });
+            }
+            setMessages(previousMessages => {
+              return GiftedChat.append(
+                previousMessages,
+                loadMessagesFromFirebase,
+              );
+            });
+            // if (change.type === "modified") {
+            //     console.log("modified: ", change.doc.data());
+            // }
+            // if (change.type === "removed") {
+            //     console.log("removed: ", change.doc.data());
+            // }
           });
-          // setMessages(messagesObj)
         },
         error => {
           console.log('real time error: ', error);
@@ -91,9 +103,9 @@ export default function OpenChatScreen({navigation, route}) {
   const onSend = useCallback((messages = []) => {
     const messageText = messages[0].text;
     sendDM(recipient.uid, messageText);
-    setMessages(previousMessages =>
-      GiftedChat.append(previousMessages, messages),
-    );
+    // setMessages(previousMessages =>
+    //   GiftedChat.append(previousMessages, messages),
+    // );
   }, []);
 
   return (
@@ -134,10 +146,10 @@ export default function OpenChatScreen({navigation, route}) {
             </View>
           </Pressable>
         </View>
-        
       </View>
       <GiftedChat
         messages={messages}
+        // renderUsernameOnMessage
         onSend={messages => onSend(messages)}
         user={{
           _id: currentUser.uid,
