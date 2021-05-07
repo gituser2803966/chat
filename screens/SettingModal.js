@@ -13,7 +13,7 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import app from '@react-native-firebase/app';
 import storage from '@react-native-firebase/storage';
 import * as Progress from 'react-native-progress';
-import { userDoc } from '../database';
+import { userDoc } from '../FBDatabase';
 
 function SettingModal() {
   const currentUser = auth().currentUser;

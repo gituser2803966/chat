@@ -16,7 +16,7 @@
  import SignUp_Password from './components/SignUp_Password';
  import SignUp_DisplayName from './components/SignUp_DisplayName';
  import auth from '@react-native-firebase/auth';
- import {AddUserToDatabase} from './database';
+ import {AddUserToDatabase} from './FBDatabase';
  
  enableScreens();
  const Stack = createNativeStackNavigator();
@@ -99,7 +99,9 @@
              uid: response.user.uid,
              firstName: firstName,
              lastName: lastName,
+             displayName: firstName+' '+lastName,
              photoURL: null,
+             roomIds:[],
              // example date
              createAt: new Date(),
              UpdateAt: null,

@@ -36,7 +36,7 @@ export default function SignUp_Password({navigation, route}) {
             <Pressable
               style={styles.Button}
               onPress={() => PressHandler()}>
-              <Text style={styles.loginButtonText}>NEXT</Text>
+              <Text style={styles.loginButtonText}>Tiếp theo</Text>
             </Pressable>
           </View>
         </View>

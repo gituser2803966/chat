@@ -7,22 +7,21 @@ import {
   StyleSheet,
   Pressable,
 } from 'react-native';
-import {GiftedChat,Bubble} from 'react-native-gifted-chat';
+import {GiftedChat, Bubble} from 'react-native-gifted-chat';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import {useContacts} from '../contexts/ContactsProvider';
+import {roomsChatOneToOneCollName, userCollRef} from '../FBDatabase';
 
 export default function OpenChatScreen({navigation, route}) {
   const {recipient} = route.params;
   const [messages, setMessages] = useState([]);
   const {contacts} = useContacts();
-  // const { RNRandomBytes } = NativeModules;
   const currentUser = auth().currentUser;
   useEffect(() => {
-    // setMessages([]);
     const idPair = IDPair(currentUser.uid, recipient.uid);
     const unsubcriber = firestore()
-      .collection('rooms')
+      .collection(roomsChatOneToOneCollName)
       .doc(idPair)
       .collection('messages')
       .orderBy('timestamp')
@@ -35,7 +34,6 @@ export default function OpenChatScreen({navigation, route}) {
               const contact = contacts.find(contact => {
                 return contact.uid === change.doc.data().senderId;
               });
-              // avatar = (contact.photoURL !== null && contact.photoURL) || null;
               if (contact) {
                 user._id = contact.uid;
                 user.name = (
@@ -55,7 +53,7 @@ export default function OpenChatScreen({navigation, route}) {
               }
               loadMessagesFromFirebase.push({
                 _id: Math.random() + Math.random() + 0.001,
-                text: change.doc.data().text,
+                text: change.doc.data().message,
                 createdAt: new Date(),
                 user: user,
               });
@@ -88,27 +86,44 @@ export default function OpenChatScreen({navigation, route}) {
 
   function dmCollection(uid) {
     const idPair = IDPair(currentUser.uid, uid);
-    return firestore().collection('rooms').doc(idPair).collection('messages');
+    return firestore()
+      .collection(roomsChatOneToOneCollName)
+      .doc(idPair)
+      .collection('messages');
   }
 
-  function sendDM(toUid, messageText) {
-    return dmCollection(toUid).add({
-      senderId: currentUser.uid,
-      recipientId: toUid,
-      text: messageText,
-      timestamp: firestore.FieldValue.serverTimestamp(),
+   function AddRoomIdsToUserColl(roomId) {
+    const senderRef = firestore().collection('users').doc(currentUser.uid);
+    const recipientRef = firestore().collection('users').doc(recipient.uid);
+    senderRef.update({
+      roomIds: firestore.FieldValue.arrayUnion(roomId),
     });
+    recipientRef.update({
+      roomIds: firestore.FieldValue.arrayUnion(roomId),
+    });
+  }
+
+  function AddMessageToRoomsChatOneToOne(toUid, messageText) {
+    return dmCollection(toUid)
+      .add({
+        senderId: currentUser.uid,
+        name: currentUser.displayName,
+        message: messageText,
+        timestamp: firestore.FieldValue.serverTimestamp(),
+      })
+      .then(() => {
+        //thêm roomIdPair vào cột rooms trong users collection vào người gởi và người nhận
+        const idPair = IDPair(currentUser.uid,recipient.uid);
+        AddRoomIdsToUserColl(idPair);
+      });
   }
 
   const onSend = useCallback((messages = []) => {
     const messageText = messages[0].text;
-    sendDM(recipient.uid, messageText);
-    // setMessages(previousMessages =>
-    //   GiftedChat.append(previousMessages, messages),
-    // );
+    AddMessageToRoomsChatOneToOne(recipient.uid, messageText);
   }, []);
 
-  const renderBubble = (props) =>{
+  const renderBubble = props => {
     return (
       <Bubble
         {...props}
@@ -126,10 +141,9 @@ export default function OpenChatScreen({navigation, route}) {
         //     backgroundColor: "#6013E8",
         //   }
         // }}
-        
       />
-    )
-  }
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -173,7 +187,7 @@ export default function OpenChatScreen({navigation, route}) {
       <GiftedChat
         messages={messages}
         onSend={messages => onSend(messages)}
-        renderBubble = {props=>renderBubble(props)}
+        renderBubble={props => renderBubble(props)}
         user={{
           _id: currentUser.uid,
           name: currentUser.displayName,
@@ -186,7 +200,7 @@ export default function OpenChatScreen({navigation, route}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:"#ffffff"
+    backgroundColor: '#ffffff',
   },
   navBar: {
     display: 'flex',

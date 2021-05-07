@@ -1,11 +1,18 @@
 import firestore from '@react-native-firebase/firestore';
 
+export const roomsChatOneToOneCollName = 'roomsChatOneToOne';
+export const usersCollName = 'users';
+
 export function userDoc(docId){
-    return firestore().collection('Users').doc(docId)
+    return firestore().collection(usersCollName).doc(docId)
 }
 
-export function userColle(){
-    return firestore().collection('Users');
+export function userCollRef(){
+    return firestore().collection(usersCollName);
+}
+
+export function getUserRooms(userId){
+    return firestore().collection(usersCollName).doc(userId).get();
 }
 
 export function roomRefWithDoc(collectionName,docId){
@@ -13,12 +20,17 @@ export function roomRefWithDoc(collectionName,docId){
 }
 
 export async function AddUserToDatabase(user){
-    const { uid, firstName, lastName, photoURL, createAt, UpdateAt } = user;
-    const userRef = firestore().collection('Users');
-    await userRef.add({
-        uid,firstName,lastName,photoURL,createAt,UpdateAt
-    })
+    // const { uid, firstName, lastName, displayName,roomIds, photoURL, createAt, UpdateAt } = user;
+    const userRef = firestore().collection(usersCollName);
+    await userRef.doc(user.uid).set(user)
 }
+
+// get all rooms
+
+// export function GetAllRooms(){
+//     return 
+// }
+
 
 // export function GetUserList(){
 //     var docRef = db.collection("Users").doc();

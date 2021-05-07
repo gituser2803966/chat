@@ -14,9 +14,9 @@ const Stack = createNativeStackNavigator();
 
 export default function Dashboard({navigation}) {
   const {signOut} = useContext(AuthContext);
-  const user = auth().currentUser;
+  const currentUser = auth().currentUser;
   var NameToDisplay =
-    (user.displayName && user.displayName.substring(0, 1)) || '';
+    (currentUser.displayName && currentUser.displayName.substring(0, 1)) || '';
   // console.log(user)
   //signOut fun
   const handleSignOut = () => {
@@ -38,11 +38,11 @@ export default function Dashboard({navigation}) {
           handlePress();
         }}>
         <View style={styles.container}>
-          {user.photoURL ? (
+          {currentUser.photoURL ? (
             <Image
               style={styles.userImageInConversaations}
               source={{
-                uri: user.photoURL,
+                uri: currentUser.photoURL,
               }}
             />
           ) : (

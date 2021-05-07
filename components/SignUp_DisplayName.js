@@ -10,7 +10,6 @@ import {
   TextInput,
 } from 'react-native';
 import {width} from '../utilis/contants';
-import { database } from '../database';
 import { AuthContext } from '../App';
 export default function Signin({navigation, route}) {
   const { signUp } = useContext(AuthContext);
@@ -49,7 +48,7 @@ export default function Signin({navigation, route}) {
             />
 
             <Pressable style={styles.Button} onPress={() => handleSignUp()}>
-              <Text style={styles.loginButtonText}>SIGNUP</Text>
+              <Text style={styles.loginButtonText}>Đăng kí</Text>
             </Pressable>
           </View>
         </View>
