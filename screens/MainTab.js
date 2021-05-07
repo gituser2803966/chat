@@ -19,7 +19,7 @@ export default function MainTab() {
           name="conversations"
           component={ConversationScreen}
           options={{
-            tabBarLabel: 'conversations',
+            tabBarLabel: 'Trò chuyện',
             // tabBarBadge:3,
           }}
         />
@@ -27,7 +27,7 @@ export default function MainTab() {
           name="contacts"
           component={ContactScreen}
           options={{
-            tabBarLabel: 'contacts',
+            tabBarLabel: 'Liên Hệ',
             // tabBarBadge:3,
           }}
         />
@@ -35,7 +35,7 @@ export default function MainTab() {
           name="calls"
           component={CallScreen}
           options={{
-            tabBarLabel: 'calls',
+            tabBarLabel: 'cuộc gọi',
           }}
         />
       </Tab.Navigator>
