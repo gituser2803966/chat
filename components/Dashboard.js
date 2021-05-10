@@ -170,12 +170,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 50,
-    // paddingBottom: 10,
   },
   userImageOpenChat: {
     width: 40,
     height: 40,
     borderRadius: 50,
-    // paddingVertical:10,
   },
 });

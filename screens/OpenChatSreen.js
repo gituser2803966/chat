@@ -11,7 +11,7 @@ import {GiftedChat, Bubble} from 'react-native-gifted-chat';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import {useContacts} from '../contexts/ContactsProvider';
-import {roomsChatOneToOneCollName, userCollRef} from '../FBDatabase';
+import {CreateRoomMetadata, AddMessageToRoomMessages, roomMessagesName} from '../FBDatabase';
 
 export default function OpenChatScreen({navigation, route}) {
   const {recipient} = route.params;
@@ -21,10 +21,8 @@ export default function OpenChatScreen({navigation, route}) {
   useEffect(() => {
     const idPair = IDPair(currentUser.uid, recipient.uid);
     const unsubcriber = firestore()
-      .collection(roomsChatOneToOneCollName)
-      .doc(idPair)
-      .collection('messages')
-      .orderBy('timestamp')
+      .collection(roomMessagesName)
+      .doc(idPair).collection('messages')
       .onSnapshot(
         snapshot => {
           snapshot.docChanges().forEach(change => {
@@ -84,66 +82,52 @@ export default function OpenChatScreen({navigation, route}) {
     return [id1, id2].sort().join('_');
   }
 
-  function dmCollection(uid) {
-    const idPair = IDPair(currentUser.uid, uid);
-    return firestore()
-      .collection(roomsChatOneToOneCollName)
-      .doc(idPair)
-      .collection('messages');
+  function CreateRoomChatWithMetadata() {
+    const idPair = IDPair(currentUser.uid, recipient.uid);
+    const roomMetadataProps = {
+      roomId: idPair,
+      createdByUserId: currentUser.uid,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+      name: recipient.displayName,
+      type: 'public',
+    };
+    return CreateRoomMetadata(roomMetadataProps);
   }
 
-   function AddRoomIdsToUserColl(roomId) {
-    const senderRef = firestore().collection('users').doc(currentUser.uid);
-    const recipientRef = firestore().collection('users').doc(recipient.uid);
-    senderRef.update({
-      roomIds: firestore.FieldValue.arrayUnion(roomId),
-    });
-    recipientRef.update({
-      roomIds: firestore.FieldValue.arrayUnion(roomId),
-    });
-  }
+  function AddMessageToConversation(messageText) {
+    // * room-messages/
+    // * <room-id>
+    //     * <message-id>
+    //         * userId - The id of the user that sent the message.
+    //         * name - The name of the user that sent the message.
+    //         * message - The content of the message.
+    //         * timestamp - The time at which the message was sent.
+    var roomIdRef = IDPair(currentUser.uid, recipient.uid);
 
-  function AddMessageToRoomsChatOneToOne(toUid, messageText) {
-    return dmCollection(toUid)
-      .add({
-        senderId: currentUser.uid,
-        name: currentUser.displayName,
-        message: messageText,
-        timestamp: firestore.FieldValue.serverTimestamp(),
-      })
-      .then(() => {
-        //thêm roomIdPair vào cột rooms trong users collection vào người gởi và người nhận
-        const idPair = IDPair(currentUser.uid,recipient.uid);
-        AddRoomIdsToUserColl(idPair);
+    const content = {
+      roomId: roomIdRef,
+      senderId: currentUser.uid,
+      username: currentUser.displayName,
+      message: messageText,
+      timestamp: firestore.FieldValue.serverTimestamp(),
+    };
+    AddMessageToRoomMessages(content).then(()=>{
+      const senderRef = firestore().collection('users').doc(currentUser.uid);
+      const recipientRef = firestore().collection('users').doc(recipient.uid);
+      senderRef.update({
+        roomIds: firestore.FieldValue.arrayUnion(roomIdRef),
       });
+      recipientRef.update({
+        roomIds: firestore.FieldValue.arrayUnion(roomIdRef),
+      });
+    });
   }
 
   const onSend = useCallback((messages = []) => {
     const messageText = messages[0].text;
-    AddMessageToRoomsChatOneToOne(recipient.uid, messageText);
+    CreateRoomChatWithMetadata();
+    AddMessageToConversation(messageText);
   }, []);
-
-  const renderBubble = props => {
-    return (
-      <Bubble
-        {...props}
-        // textStyle={{
-        //   right: {
-        //     color: "black"
-        //   },
-        //   left: {
-        //     color: "red"
-        //   }
-        // }}
-
-        // wrapperStyle={{
-        //   right: {
-        //     backgroundColor: "#6013E8",
-        //   }
-        // }}
-      />
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -187,7 +171,6 @@ export default function OpenChatScreen({navigation, route}) {
       <GiftedChat
         messages={messages}
         onSend={messages => onSend(messages)}
-        renderBubble={props => renderBubble(props)}
         user={{
           _id: currentUser.uid,
           name: currentUser.displayName,

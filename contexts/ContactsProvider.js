@@ -1,7 +1,7 @@
 import React, {useContext, useState, useEffect} from 'react';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { usersCollName } from '../FBDatabase';
+import { userCollName } from '../FBDatabase';
 
 const ContactsContext = React.createContext();
 
@@ -14,19 +14,20 @@ export function ContactsProvider({children}) {
   const currentUser = auth().currentUser;
 
   function getContactList() {
-    firestore()
-      .collection(usersCollName)
-      .get()
-      .then(querySnapshot => {
-          querySnapshot.forEach(doc=>{
-            setContacts((prevContacts)=>{
-              return [...prevContacts,doc.data()]
-            })
-          })
+    return firestore()
+      .collection(userCollName)
+      .onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+          const contactsFromFireStore = [];
+          if (change.type === 'added') {
+            contactsFromFireStore.push(change.doc.data());
+            setContacts(prevContacts=>{
+              return [...prevContacts,change.doc.data()];
+            });
+          }
+        })
       })
-      .catch(error => {
-        console.log('Error getting contacts document:', error);
-      });
+     
   }
 
   const value = {contacts};
