@@ -4,13 +4,13 @@ import CallScreen from './CallScreen';
 import ContactScreen from './ContactScreen';
 import ConversationScreen from './ConversationScreen';
 import {ContactsProvider} from '../contexts/ContactsProvider';
-import {ConversationProvider} from '../contexts/ConversationsProvider';
+import {RoomProvider} from '../contexts/RoomsProvider';
 const Tab = createBottomTabNavigator();
 
 export default function MainTab() {
   return (
     <ContactsProvider>
-      <ConversationProvider>
+      <RoomProvider>
         <Tab.Navigator
           initialRouteName="conversations"
           tabBarOptions={{
@@ -41,7 +41,7 @@ export default function MainTab() {
             }}
           />
         </Tab.Navigator>
-      </ConversationProvider>
+      </RoomProvider>
     </ContactsProvider>
   );
 }

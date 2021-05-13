@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Pressable,
 } from 'react-native';
-import {GiftedChat, Bubble} from 'react-native-gifted-chat';
+import {GiftedChat} from 'react-native-gifted-chat';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import {useContacts} from '../contexts/ContactsProvider';
@@ -22,7 +22,7 @@ export default function OpenChatScreen({navigation, route}) {
     const idPair = IDPair(currentUser.uid, recipient.uid);
     const unsubcriber = firestore()
       .collection(roomMessagesName)
-      .doc(idPair).collection('messages')
+      .doc(idPair).collection('messages').orderBy('timestamp')
       .onSnapshot(
         snapshot => {
           snapshot.docChanges().forEach(change => {
@@ -87,6 +87,7 @@ export default function OpenChatScreen({navigation, route}) {
     const roomMetadataProps = {
       roomId: idPair,
       createdByUserId: currentUser.uid,
+      recipients: firestore.FieldValue.arrayUnion(recipient.uid),
       createdAt: firestore.FieldValue.serverTimestamp(),
       name: recipient.displayName,
       type: 'public',
